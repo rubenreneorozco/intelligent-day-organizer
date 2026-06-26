@@ -11,12 +11,18 @@ export default function TaskModal({ task, onClose, onUpdate }) {
   const [attachments, setAttachments] = useState(task.attachments || []);
 
   const handleSave = () => {
+    let finalSubtasks = [...subtasks];
+    // Automatically add any subtask they typed but forgot to press 'Add' on
+    if (newSubtask.trim()) {
+      finalSubtasks.push({ id: Date.now().toString(), text: newSubtask.trim(), completed: false });
+    }
+    
     onUpdate({
       ...task,
       text,
       description,
       dueDate,
-      subtasks,
+      subtasks: finalSubtasks,
       attachments
     });
     onClose();
