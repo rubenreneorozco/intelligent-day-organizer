@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Calendar, AlignLeft, Paperclip, CheckSquare, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 export default function TaskModal({ task, onClose, onUpdate }) {
   const [text, setText] = useState(task.text);
@@ -134,11 +136,13 @@ export default function TaskModal({ task, onClose, onUpdate }) {
             {/* Due Date */}
             <div style={sectionStyle}>
               <div style={sectionHeaderStyle}><Calendar size={18} /> Due Date</div>
-              <input 
-                type="date" 
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                style={inputStyle}
+              <DatePicker 
+                selected={dueDate ? new Date(dueDate) : null}
+                onChange={(date) => setDueDate(date ? date.toISOString() : '')}
+                customInput={<input style={{...inputStyle, width: '100%'}} />}
+                dateFormat="MMMM d, yyyy"
+                isClearable
+                placeholderText="Select a due date"
               />
             </div>
 

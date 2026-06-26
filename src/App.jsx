@@ -26,6 +26,7 @@ function App() {
   
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectColor, setNewProjectColor] = useState('#E63946');
 
   // Persist
   useEffect(() => {
@@ -61,10 +62,11 @@ function App() {
     const newProj = {
       id: Date.now().toString(),
       name: newProjectName.trim(),
-      color: '#' + Math.floor(Math.random()*16777215).toString(16) // random color
+      color: newProjectColor
     };
     setProjects([...projects, newProj]);
     setNewProjectName('');
+    setNewProjectColor('#E63946');
     setIsAddingProject(false);
     setCurrentView(newProj.id);
   };
@@ -114,7 +116,7 @@ function App() {
           ))}
 
           {isAddingProject ? (
-            <form onSubmit={handleAddProject} style={{ padding: '0.5rem 1rem' }}>
+            <form onSubmit={handleAddProject} style={{ padding: '0.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <input 
                 autoFocus
                 type="text" 
@@ -122,8 +124,23 @@ function App() {
                 onChange={e => setNewProjectName(e.target.value)}
                 placeholder="Project name..."
                 style={navInputStyle}
-                onBlur={() => setIsAddingProject(false)}
               />
+              <div style={{ display: 'flex', gap: '0.5rem', padding: '0.25rem 0' }}>
+                {['#E63946', '#3A86FF', '#06D6A0', '#FFD166', '#8338EC'].map(color => (
+                  <div 
+                    key={color}
+                    onClick={() => setNewProjectColor(color)}
+                    style={{
+                      width: '20px', height: '20px', borderRadius: '50%', backgroundColor: color, cursor: 'pointer',
+                      border: newProjectColor === color ? '2px solid white' : '2px solid transparent'
+                    }}
+                  />
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', flex: 1, fontSize: '0.75rem' }}>Save</button>
+                <button type="button" onClick={() => setIsAddingProject(false)} style={{ padding: '0.25rem 0.5rem', flex: 1, fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--color-border)', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+              </div>
             </form>
           ) : (
             <button style={addProjectBtnStyle} onClick={() => setIsAddingProject(true)}>
