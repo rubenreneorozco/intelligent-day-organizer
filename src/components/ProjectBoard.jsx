@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, MoreHorizontal, Trash2, CornerDownRight, ChevronDown, ChevronRight, CheckCircle2, Circle } from 'lucide-react';
 
-export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, onOpenTask, onDeleteTask, onDeleteProject }) {
+export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, onOpenTask, onDeleteTask, onDeleteProject, onUpdateProject }) {
   const [newTaskText, setNewTaskText] = useState('');
   const [addingToCol, setAddingToCol] = useState(null);
   const [expandedTasks, setExpandedTasks] = useState(new Set());
@@ -11,6 +11,8 @@ export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, 
     { id: 'in-progress', title: 'In Progress' },
     { id: 'done', title: 'Done' }
   ];
+  
+  const projectColors = ['#E63946', '#3A86FF', '#06D6A0', '#FFD166', '#8338EC'];
 
   const handleDragStart = (e, taskId) => {
     e.dataTransfer.setData('taskId', taskId);
@@ -66,7 +68,24 @@ export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, 
       <header style={headerStyle}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: project.color || 'var(--color-accent)' }}></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: 'var(--color-bg-elevated)', padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-full)' }}>
+              {projectColors.map(color => (
+                <div 
+                  key={color}
+                  onClick={() => onUpdateProject({ ...project, color })}
+                  style={{
+                    width: project.color === color ? '16px' : '10px', 
+                    height: project.color === color ? '16px' : '10px', 
+                    borderRadius: '50%', 
+                    backgroundColor: color, 
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    opacity: project.color === color ? 1 : 0.5
+                  }}
+                  title="Change Color"
+                />
+              ))}
+            </div>
             <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>{project.name}</h1>
           </div>
           <button 

@@ -71,6 +71,10 @@ function App() {
     setCurrentView(newProj.id);
   };
 
+  const handleUpdateProject = (updatedProject) => {
+    setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
+  };
+
   const handleDeleteProject = (projectId) => {
     // Delete the project
     setProjects(projects.filter(p => p.id !== projectId));
@@ -176,6 +180,7 @@ function App() {
               onOpenTask={setActiveTask}
               onDeleteTask={handleDeleteTask}
               onDeleteProject={handleDeleteProject}
+              onUpdateProject={handleUpdateProject}
             />
           </div>
         )}
