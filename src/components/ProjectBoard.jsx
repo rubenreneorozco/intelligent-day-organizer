@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Plus, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Plus, MoreHorizontal, Trash2, CornerDownRight, ChevronDown, ChevronRight, CheckCircle2, Circle } from 'lucide-react';
 
 export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, onOpenTask, onDeleteTask, onDeleteProject }) {
   const [newTaskText, setNewTaskText] = useState('');
   const [addingToCol, setAddingToCol] = useState(null);
+  const [expandedTasks, setExpandedTasks] = useState(new Set());
 
   const columns = [
     { id: 'todo', title: 'To Do' },
@@ -41,6 +42,23 @@ export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, 
     });
     setNewTaskText('');
     setAddingToCol(null);
+  };
+
+  const toggleExpand = (e, taskId) => {
+    e.stopPropagation();
+    const next = new Set(expandedTasks);
+    if (next.has(taskId)) {
+      next.delete(taskId);
+    } else {
+      next.add(taskId);
+    }
+    setExpandedTasks(next);
+  };
+
+  const toggleSubtask = (e, task, subtaskId) => {
+    e.stopPropagation();
+    const updatedSubtasks = task.subtasks.map(s => s.id === subtaskId ? { ...s, completed: !s.completed } : s);
+    onUpdateTask({ ...task, subtasks: updatedSubtasks });
   };
 
   return (
@@ -82,7 +100,11 @@ export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, 
               </div>
 
               <div style={taskContainerStyle}>
-                {colTasks.map(task => (
+                {colTasks.map(task => {
+                  const isExpanded = expandedTasks.has(task.id);
+                  const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+                  
+                  return (
                   <div 
                     key={task.id} 
                     style={taskCardStyle}
@@ -102,18 +124,40 @@ export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, 
                         <Trash2 size={14} />
                       </button>
                     </div>
+                    
                     {task.dueDate && (
                       <div style={{ fontSize: '0.75rem', color: 'var(--color-accent)', fontWeight: 600 }}>
                         Due: {new Date(task.dueDate).toLocaleDateString()}
                       </div>
                     )}
-                    {task.subtasks?.length > 0 && (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
+                    
+                    {hasSubtasks && (
+                      <div 
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.5rem', cursor: 'pointer' }}
+                        onClick={(e) => toggleExpand(e, task.id)}
+                      >
+                        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                         {task.subtasks.filter(s => s.completed).length}/{task.subtasks.length} subtasks
                       </div>
                     )}
+
+                    {isExpanded && hasSubtasks && (
+                      <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        {task.subtasks.map(sub => (
+                          <div 
+                            key={sub.id} 
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: sub.completed ? 'var(--color-text-muted)' : 'var(--color-text-primary)' }}
+                            onClick={(e) => toggleSubtask(e, task, sub.id)}
+                          >
+                            <CornerDownRight size={14} color="var(--color-text-muted)" />
+                            {sub.completed ? <CheckCircle2 size={14} color="var(--color-accent)" /> : <Circle size={14} color="var(--color-text-muted)" />}
+                            <span style={{ textDecoration: sub.completed ? 'line-through' : 'none', padding: '0.25rem 0' }}>{sub.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ))}
+                )})}
               </div>
 
               {addingToCol === col.id ? (

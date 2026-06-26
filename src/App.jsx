@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Calendar, Plus, FolderKanban } from 'lucide-react';
+import { LayoutDashboard, Calendar, Plus, FolderKanban, CalendarDays } from 'lucide-react';
 import MyDay from './components/MyDay';
 import ProjectBoard from './components/ProjectBoard';
 import TaskModal from './components/TaskModal';
+import CalendarView from './components/CalendarView';
 import './index.css';
 
 function App() {
@@ -20,7 +21,7 @@ function App() {
     ];
   });
 
-  const [currentView, setCurrentView] = useState('my-day'); // 'my-day' or projectId
+  const [currentView, setCurrentView] = useState('my-day'); // 'my-day' | 'calendar' | projectId
   const [activeTask, setActiveTask] = useState(null);
   
   const [isAddingProject, setIsAddingProject] = useState(false);
@@ -90,7 +91,14 @@ function App() {
             style={currentView === 'my-day' ? activeNavItemStyle : navItemStyle}
             onClick={() => setCurrentView('my-day')}
           >
-            <Calendar size={20} /> My Day
+            <LayoutDashboard size={20} /> My Day
+          </div>
+          
+          <div 
+            style={currentView === 'calendar' ? activeNavItemStyle : navItemStyle}
+            onClick={() => setCurrentView('calendar')}
+          >
+            <CalendarDays size={20} /> Calendar
           </div>
 
           <div style={sidebarSectionTitle}>Projects</div>
@@ -133,6 +141,12 @@ function App() {
             onUpdateTask={handleUpdateTask}
             onAddTask={handleAddTask}
             onDeleteTask={handleDeleteTask}
+            onOpenTask={setActiveTask}
+          />
+        ) : currentView === 'calendar' ? (
+          <CalendarView 
+            tasks={tasks}
+            projects={projects}
             onOpenTask={setActiveTask}
           />
         ) : (
