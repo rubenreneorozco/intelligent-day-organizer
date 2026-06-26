@@ -1,24 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
-  --color-bg-primary: #0A0A0F;
-  --color-bg-secondary: #111118;
-  --color-bg-card: #16161E;
-  --color-bg-card-hover: #1C1C26;
-  --color-bg-elevated: #1E1E28;
-  --color-bg-nav: rgba(10, 10, 15, .85);
+  --color-bg-primary: #f8f9fa;
+  --color-bg-secondary: #ffffff;
+  --color-bg-card: #ffffff;
+  --color-bg-card-hover: #f1f3f5;
+  --color-bg-elevated: #f1f3f5;
+  --color-bg-nav: rgba(255, 255, 255, .85);
   
-  --color-text-primary: #FFFFFF;
-  --color-text-secondary: #A0A0B8;
-  --color-text-muted: #6B6B80;
+  --color-text-primary: #121212;
+  --color-text-secondary: #495057;
+  --color-text-muted: #868e96;
   
   --color-accent: #E63946;
-  --color-accent-hover: #FF4D5A;
-  --color-accent-glow: rgba(230, 57, 70, .3);
+  --color-accent-hover: #D62839;
+  --color-accent-glow: rgba(230, 57, 70, .15);
   --color-accent-subtle: rgba(230, 57, 70, .1);
   
-  --color-border: rgba(255, 255, 255, .06);
-  --color-border-hover: rgba(255, 255, 255, .12);
+  --color-border: #e9ecef;
+  --color-border-hover: #dee2e6;
   --color-border-accent: rgba(230, 57, 70, .3);
   
   --font-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

@@ -210,8 +210,10 @@ const sidebarStyle = {
 };
 
 const sidebarHeaderStyle = {
-  padding: '1.5rem',
-  borderBottom: '1px solid var(--color-border)'
+  padding: '2.5rem 2rem 2rem',
+  borderBottom: '1px solid var(--color-border)',
+  backgroundColor: '#0A0A0F', // Hardcoded dark background
+  color: '#FFFFFF' // Hardcoded white text
 };
 
 const sidebarNavStyle = {
