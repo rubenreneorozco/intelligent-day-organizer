@@ -143,7 +143,7 @@ function App() {
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', flex: 1, fontSize: '0.75rem' }}>Save</button>
-                <button type="button" onClick={() => setIsAddingProject(false)} style={{ padding: '0.25rem 0.5rem', flex: 1, fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--color-border)', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={() => setIsAddingProject(false)} style={{ padding: '0.25rem 0.5rem', flex: 1, fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
               </div>
             </form>
           ) : (
@@ -272,7 +272,7 @@ const navInputStyle = {
   border: '1px solid var(--color-accent)',
   borderRadius: '4px',
   padding: '0.5rem',
-  color: 'white',
+  color: 'var(--color-text-primary)',
   outline: 'none',
   fontSize: '0.875rem'
 };

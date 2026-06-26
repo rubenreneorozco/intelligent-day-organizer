@@ -295,6 +295,6 @@ const inputStyle = {
   backgroundColor: 'var(--color-bg-elevated)',
   border: '1px solid var(--color-accent)',
   borderRadius: 'var(--radius-sm)',
-  color: 'white',
+  color: 'var(--color-text-primary)',
   outline: 'none'
 };
