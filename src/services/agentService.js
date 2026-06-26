@@ -31,8 +31,8 @@ export async function generateAgentInsights(tasks) {
   }
 
   const promptText = `
-You are an expert executive assistant and time management coach. 
-The user has the following tasks to do today:
+You are an expert executive assistant and project manager. 
+The user has the following tasks in their "My Day" view today. Some of these are one-off daily tasks, and others have been automatically pulled in from larger Projects because they are due today:
 
 ${activeTasks.map(t => `- ${t}`).join('\n')}
 
