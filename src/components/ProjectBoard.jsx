@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, MoreHorizontal } from 'lucide-react';
+import { Plus, MoreHorizontal, Trash2 } from 'lucide-react';
 
-export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, onOpenTask }) {
+export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, onOpenTask, onDeleteTask, onDeleteProject }) {
   const [newTaskText, setNewTaskText] = useState('');
   const [addingToCol, setAddingToCol] = useState(null);
 
@@ -46,9 +46,22 @@ export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, 
   return (
     <div style={boardContainerStyle}>
       <header style={headerStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: project.color || 'var(--color-accent)' }}></div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>{project.name}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: project.color || 'var(--color-accent)' }}></div>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>{project.name}</h1>
+          </div>
+          <button 
+            className="btn btn-secondary" 
+            style={{ color: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+            onClick={() => {
+              if (window.confirm('Are you sure you want to delete this project and all its tasks?')) {
+                onDeleteProject(project.id);
+              }
+            }}
+          >
+            <Trash2 size={18} style={{ marginRight: '0.5rem' }} /> Delete Project
+          </button>
         </div>
       </header>
 
@@ -77,7 +90,18 @@ export default function ProjectBoard({ project, tasks, onUpdateTask, onAddTask, 
                     onDragStart={(e) => handleDragStart(e, task.id)}
                     onClick={() => onOpenTask(task)}
                   >
-                    <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>{task.text}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ fontWeight: 500, marginBottom: '0.5rem', flex: 1 }}>{task.text}</div>
+                      <button 
+                        style={deleteTaskBtnStyle}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteTask(task.id);
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                     {task.dueDate && (
                       <div style={{ fontSize: '0.75rem', color: 'var(--color-accent)', fontWeight: 600 }}>
                         Due: {new Date(task.dueDate).toLocaleDateString()}
@@ -176,6 +200,17 @@ const taskCardStyle = {
   border: '1px solid var(--color-border)',
   cursor: 'grab',
   transition: 'border-color 0.2s, transform 0.2s'
+};
+
+const deleteTaskBtnStyle = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--color-text-muted)',
+  cursor: 'pointer',
+  padding: '0.25rem',
+  marginLeft: '0.5rem',
+  borderRadius: '4px',
+  display: 'flex'
 };
 
 const addCardBtnStyle = {

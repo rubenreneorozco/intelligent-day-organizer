@@ -68,6 +68,15 @@ function App() {
     setCurrentView(newProj.id);
   };
 
+  const handleDeleteProject = (projectId) => {
+    // Delete the project
+    setProjects(projects.filter(p => p.id !== projectId));
+    // Also delete all tasks associated with this project
+    setTasks(tasks.filter(t => t.projectId !== projectId));
+    // Go back to My Day view
+    setCurrentView('my-day');
+  };
+
   return (
     <div className="app-container">
       {/* App Sidebar */}
@@ -134,6 +143,8 @@ function App() {
               onUpdateTask={handleUpdateTask}
               onAddTask={handleAddTask}
               onOpenTask={setActiveTask}
+              onDeleteTask={handleDeleteTask}
+              onDeleteProject={handleDeleteProject}
             />
           </div>
         )}
