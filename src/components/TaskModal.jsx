@@ -41,6 +41,10 @@ export default function TaskModal({ task, onClose, onUpdate }) {
     setSubtasks(subtasks.map(s => s.id === id ? { ...s, completed: !s.completed } : s));
   };
 
+  const updateSubtaskText = (id, newText) => {
+    setSubtasks(subtasks.map(s => s.id === id ? { ...s, text: newText } : s));
+  };
+
   const removeSubtask = (id) => {
     setSubtasks(subtasks.filter(s => s.id !== id));
   };
@@ -61,7 +65,8 @@ export default function TaskModal({ task, onClose, onUpdate }) {
             type="text" 
             value={text}
             onChange={(e) => setText(e.target.value)}
-            style={titleInputStyle}
+            style={{...titleInputStyle, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-secondary)' }}
+            placeholder="Task title"
           />
           <button onClick={onClose} style={closeButtonStyle}><X size={24} /></button>
         </div>
@@ -93,9 +98,21 @@ export default function TaskModal({ task, onClose, onUpdate }) {
                       onChange={() => toggleSubtask(sub.id)}
                       style={{ cursor: 'pointer' }}
                     />
-                    <span style={{ flex: 1, textDecoration: sub.completed ? 'line-through' : 'none', opacity: sub.completed ? 0.6 : 1 }}>
-                      {sub.text}
-                    </span>
+                    <input 
+                      type="text"
+                      value={sub.text}
+                      onChange={(e) => updateSubtaskText(sub.id, e.target.value)}
+                      style={{ 
+                        flex: 1, 
+                        background: 'transparent', 
+                        border: 'none', 
+                        color: 'inherit', 
+                        outline: 'none',
+                        textDecoration: sub.completed ? 'line-through' : 'none', 
+                        opacity: sub.completed ? 0.6 : 1,
+                        fontSize: '0.875rem'
+                      }}
+                    />
                     <button onClick={() => removeSubtask(sub.id)} style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
                       <Trash2 size={16} />
                     </button>
