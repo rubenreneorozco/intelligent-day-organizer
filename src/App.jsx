@@ -1,95 +1,194 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Calendar, Plus, FolderKanban, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Calendar, Plus, FolderKanban, CalendarDays, LogOut } from 'lucide-react';
 import MyDay from './components/MyDay';
 import ProjectBoard from './components/ProjectBoard';
 import TaskModal from './components/TaskModal';
 import CalendarView from './components/CalendarView';
+import Auth from './components/Auth';
+import { supabase } from './lib/supabase';
 import './index.css';
 
 function App() {
-  // State
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem('dayOrganizer_tasks');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [projects, setProjects] = useState(() => {
-    const saved = localStorage.getItem('dayOrganizer_projects');
-    return saved ? JSON.parse(saved) : [
-      { id: 'proj-1', name: 'Nebraska Implementation', color: '#E63946' },
-      { id: 'proj-2', name: 'Token. Dashboard V2', color: '#3A86FF' }
-    ];
-  });
+  // Session & Data State
+  const [session, setSession] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // UI State
   const [currentView, setCurrentView] = useState('my-day'); // 'my-day' | 'calendar' | projectId
   const [activeTask, setActiveTask] = useState(null);
-  
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectColor, setNewProjectColor] = useState('#E63946');
 
-  // Persist
+  // 1. Auth Init
   useEffect(() => {
-    localStorage.setItem('dayOrganizer_tasks', JSON.stringify(tasks));
-  }, [tasks]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // 2. Fetch Data on Session
   useEffect(() => {
-    localStorage.setItem('dayOrganizer_projects', JSON.stringify(projects));
-  }, [projects]);
+    if (session) {
+      fetchData();
+    } else {
+      setTasks([]);
+      setProjects([]);
+      setLoading(false);
+    }
+  }, [session]);
 
-  // Handlers
-  const handleAddTask = (newTask) => {
-    setTasks([newTask, ...tasks]);
+  const fetchData = async () => {
+    setLoading(true);
+    const [projRes, taskRes] = await Promise.all([
+      supabase.from('projects').select('*').order('created_at', { ascending: true }),
+      supabase.from('tasks').select('*').order('created_at', { ascending: false })
+    ]);
+
+    if (projRes.data) setProjects(projRes.data);
+    
+    // Map DB columns to our frontend camelCase state
+    if (taskRes.data) {
+      setTasks(taskRes.data.map(t => ({
+        id: t.id,
+        projectId: t.project_id,
+        text: t.text,
+        description: t.description,
+        status: t.status,
+        completed: t.completed,
+        dueDate: t.due_date,
+        subtasks: t.subtasks,
+        attachments: t.attachments,
+        createdAt: t.created_at
+      })));
+    }
+    setLoading(false);
   };
 
-  const handleUpdateTask = (updatedTask) => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // Handlers
+  const handleAddTask = async (newTask) => {
+    // Optimistic UI
+    setTasks([newTask, ...tasks]);
+    
+    // DB
+    await supabase.from('tasks').insert({
+      id: newTask.id,
+      user_id: session.user.id,
+      project_id: newTask.projectId,
+      text: newTask.text,
+      status: newTask.status,
+      completed: newTask.completed,
+      due_date: newTask.dueDate || null,
+      subtasks: newTask.subtasks || [],
+      attachments: newTask.attachments || []
+    });
+  };
+
+  const handleUpdateTask = async (updatedTask) => {
+    // Optimistic UI
     setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
     if (activeTask && activeTask.id === updatedTask.id) {
       setActiveTask(updatedTask);
     }
+
+    // DB
+    await supabase.from('tasks').update({
+      text: updatedTask.text,
+      description: updatedTask.description,
+      status: updatedTask.status,
+      completed: updatedTask.completed,
+      due_date: updatedTask.dueDate || null,
+      subtasks: updatedTask.subtasks || [],
+      attachments: updatedTask.attachments || []
+    }).eq('id', updatedTask.id);
   };
 
-  const handleDeleteTask = (taskId) => {
+  const handleDeleteTask = async (taskId) => {
+    // Optimistic
     setTasks(tasks.filter(t => t.id !== taskId));
     if (activeTask && activeTask.id === taskId) {
       setActiveTask(null);
     }
+
+    // DB
+    await supabase.from('tasks').delete().eq('id', taskId);
   };
 
-  const handleAddProject = (e) => {
+  const handleAddProject = async (e) => {
     e.preventDefault();
     if (!newProjectName.trim()) return;
+    
     const newProj = {
       id: Date.now().toString(),
       name: newProjectName.trim(),
       color: newProjectColor
     };
+
+    // Optimistic
     setProjects([...projects, newProj]);
     setNewProjectName('');
     setNewProjectColor('#E63946');
     setIsAddingProject(false);
     setCurrentView(newProj.id);
+
+    // DB
+    await supabase.from('projects').insert({
+      id: newProj.id,
+      user_id: session.user.id,
+      name: newProj.name,
+      color: newProj.color
+    });
   };
 
-  const handleUpdateProject = (updatedProject) => {
+  const handleUpdateProject = async (updatedProject) => {
+    // Optimistic
     setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
+    
+    // DB
+    await supabase.from('projects').update({ color: updatedProject.color }).eq('id', updatedProject.id);
   };
 
-  const handleDeleteProject = (projectId) => {
-    // Delete the project
+  const handleDeleteProject = async (projectId) => {
+    // Optimistic
     setProjects(projects.filter(p => p.id !== projectId));
-    // Also delete all tasks associated with this project
     setTasks(tasks.filter(t => t.projectId !== projectId));
-    // Go back to My Day view
     setCurrentView('my-day');
+
+    // DB (Cascade will handle tasks in DB if configured, but safe to delete directly if not)
+    await supabase.from('projects').delete().eq('id', projectId);
   };
+
+  if (!session) {
+    return <Auth />;
+  }
+
+  if (loading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--color-bg-main)', color: 'var(--color-text-primary)' }}>Loading your workspace...</div>;
+  }
 
   return (
     <div className="app-container">
       {/* App Sidebar */}
       <nav style={sidebarStyle}>
         <div style={sidebarHeaderStyle}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Token<span style={{ color: 'var(--color-accent)' }}>.</span></h1>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Token<span style={{ color: 'var(--color-accent)' }}>.</span></span>
+            <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }} title="Logout">
+              <LogOut size={16} />
+            </button>
+          </h1>
         </div>
 
         <div style={sidebarNavStyle}>
