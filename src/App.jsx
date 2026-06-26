@@ -21,6 +21,7 @@ function App() {
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectColor, setNewProjectColor] = useState('#E63946');
+  const [draggedProjIdx, setDraggedProjIdx] = useState(null);
 
   // 1. Auth Init
   useEffect(() => {
@@ -49,8 +50,8 @@ function App() {
   const fetchData = async () => {
     setLoading(true);
     const [projRes, taskRes] = await Promise.all([
-      supabase.from('projects').select('*').order('created_at', { ascending: true }),
-      supabase.from('tasks').select('*').order('created_at', { ascending: false })
+      supabase.from('projects').select('*').order('order_index', { ascending: true }),
+      supabase.from('tasks').select('*').order('order_index', { ascending: true })
     ]);
 
     if (projRes.data) setProjects(projRes.data);
@@ -67,6 +68,7 @@ function App() {
         dueDate: t.due_date,
         subtasks: t.subtasks,
         attachments: t.attachments,
+        orderIndex: t.order_index,
         createdAt: t.created_at
       })));
     }
@@ -80,19 +82,21 @@ function App() {
   // Handlers
   const handleAddTask = async (newTask) => {
     // Optimistic UI
-    setTasks([newTask, ...tasks]);
+    const finalTask = { ...newTask, orderIndex: tasks.length };
+    setTasks([...tasks, finalTask]);
     
     // DB
     await supabase.from('tasks').insert({
-      id: newTask.id,
+      id: finalTask.id,
       user_id: session.user.id,
-      project_id: newTask.projectId,
-      text: newTask.text,
-      status: newTask.status,
-      completed: newTask.completed,
-      due_date: newTask.dueDate || null,
-      subtasks: newTask.subtasks || [],
-      attachments: newTask.attachments || []
+      project_id: finalTask.projectId,
+      text: finalTask.text,
+      status: finalTask.status,
+      completed: finalTask.completed,
+      due_date: finalTask.dueDate || null,
+      subtasks: finalTask.subtasks || [],
+      attachments: finalTask.attachments || [],
+      order_index: finalTask.orderIndex
     });
   };
 
@@ -133,7 +137,8 @@ function App() {
     const newProj = {
       id: Date.now().toString(),
       name: newProjectName.trim(),
-      color: newProjectColor
+      color: newProjectColor,
+      order_index: projects.length
     };
 
     // Optimistic
@@ -148,7 +153,8 @@ function App() {
       id: newProj.id,
       user_id: session.user.id,
       name: newProj.name,
-      color: newProj.color
+      color: newProj.color,
+      order_index: newProj.order_index
     });
   };
 
@@ -168,6 +174,72 @@ function App() {
 
     // DB (Cascade will handle tasks in DB if configured, but safe to delete directly if not)
     await supabase.from('projects').delete().eq('id', projectId);
+  };
+
+  const handleReorderProjects = async (dragIndex, dropIndex) => {
+    if (dragIndex === dropIndex) return;
+    const newProjects = [...projects];
+    const [draggedItem] = newProjects.splice(dragIndex, 1);
+    newProjects.splice(dropIndex, 0, draggedItem);
+    
+    const reordered = newProjects.map((p, i) => ({ ...p, order_index: i }));
+    setProjects(reordered);
+
+    // Bulk update Supabase
+    await supabase.from('projects').upsert(reordered.map(p => ({
+      id: p.id,
+      user_id: session.user.id,
+      name: p.name,
+      color: p.color,
+      order_index: p.order_index
+    })));
+  };
+
+  const handleReorderTasks = async (reorderedTasks) => {
+    // reorderedTasks is the new subset array (e.g. active tasks from MyDay)
+    const updatedTasks = reorderedTasks.map((t, i) => ({ ...t, orderIndex: i }));
+    
+    // Merge back into main tasks array
+    const newTasks = tasks.map(t => {
+      const found = updatedTasks.find(ut => ut.id === t.id);
+      return found ? found : t;
+    });
+    
+    // Sort all tasks by orderIndex
+    newTasks.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+    setTasks(newTasks);
+
+    // Bulk update Supabase for ONLY the changed tasks
+    await supabase.from('tasks').upsert(updatedTasks.map(t => ({
+      id: t.id,
+      user_id: session.user.id,
+      project_id: t.projectId,
+      text: t.text,
+      status: t.status,
+      completed: t.completed,
+      due_date: t.dueDate || null,
+      subtasks: t.subtasks || [],
+      attachments: t.attachments || [],
+      order_index: t.orderIndex
+    })));
+  };
+
+  // Drag and drop handlers for projects sidebar
+  const handleDragStartProj = (e, idx) => {
+    setDraggedProjIdx(idx);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOverProj = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDropProj = (e, dropIdx) => {
+    e.preventDefault();
+    if (draggedProjIdx !== null) {
+      handleReorderProjects(draggedProjIdx, dropIdx);
+    }
+    setDraggedProjIdx(null);
   };
 
   if (!session) {
@@ -208,9 +280,13 @@ function App() {
 
           <div style={sidebarSectionTitle}>Projects</div>
           
-          {projects.map(p => (
+          {projects.map((p, idx) => (
             <div 
               key={p.id}
+              draggable
+              onDragStart={(e) => handleDragStartProj(e, idx)}
+              onDragOver={handleDragOverProj}
+              onDrop={(e) => handleDropProj(e, idx)}
               style={currentView === p.id ? activeNavItemStyle : navItemStyle}
               onClick={() => setCurrentView(p.id)}
             >
@@ -262,6 +338,7 @@ function App() {
             onAddTask={handleAddTask}
             onDeleteTask={handleDeleteTask}
             onOpenTask={setActiveTask}
+            onReorderTasks={handleReorderTasks}
           />
         ) : currentView === 'calendar' ? (
           <CalendarView 
@@ -311,8 +388,8 @@ const sidebarStyle = {
 const sidebarHeaderStyle = {
   padding: '2.5rem 2rem 2rem',
   borderBottom: '1px solid var(--color-border)',
-  backgroundColor: '#0A0A0F', // Hardcoded dark background
-  color: '#FFFFFF' // Hardcoded white text
+  backgroundColor: '#0A0A0F',
+  color: '#FFFFFF'
 };
 
 const sidebarNavStyle = {

@@ -3,7 +3,7 @@ import { Plus, CheckCircle2, Trash2, CalendarDays, Sparkles } from 'lucide-react
 import { generateAgentInsights } from '../services/agentService';
 import { isToday, isPast, parseISO } from 'date-fns';
 
-export default function MyDay({ tasks, onUpdateTask, onAddTask, onDeleteTask, onOpenTask }) {
+export default function MyDay({ tasks, onUpdateTask, onAddTask, onDeleteTask, onOpenTask, onReorderTasks }) {
   const [newTaskText, setNewTaskText] = useState('');
   const [agentResponse, setAgentResponse] = useState(null);
   const [isAgentLoading, setIsAgentLoading] = useState(false);
@@ -45,6 +45,31 @@ export default function MyDay({ tasks, onUpdateTask, onAddTask, onDeleteTask, on
   const activeTasks = myDayTasks.filter(t => !t.completed);
   const completedTasks = myDayTasks.filter(t => t.completed);
 
+  const [draggedTaskIdx, setDraggedTaskIdx] = useState(null);
+
+  const handleDragStartTask = (e, index) => {
+    setDraggedTaskIdx(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOverTask = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDropTask = (e, targetIdx) => {
+    e.preventDefault();
+    if (draggedTaskIdx === null || draggedTaskIdx === targetIdx) return;
+
+    const newTasks = [...activeTasks];
+    const [draggedItem] = newTasks.splice(draggedTaskIdx, 1);
+    newTasks.splice(targetIdx, 0, draggedItem);
+    
+    if (onReorderTasks) {
+      onReorderTasks(newTasks);
+    }
+    setDraggedTaskIdx(null);
+  };
+
   return (
     <div style={{ display: 'flex', width: '100%', height: '100%' }}>
       <main style={{ flex: 1, padding: '2rem 4rem', overflowY: 'auto' }}>
@@ -81,8 +106,17 @@ export default function MyDay({ tasks, onUpdateTask, onAddTask, onDeleteTask, on
                 Active Tasks ({activeTasks.length})
               </h2>
               <div className="task-list">
-                {activeTasks.map(task => (
-                  <div key={task.id} className="task-item" onClick={() => onOpenTask(task)}>
+                {activeTasks.map((task, idx) => (
+                  <div 
+                    key={task.id} 
+                    className="task-item" 
+                    onClick={() => onOpenTask(task)}
+                    draggable
+                    onDragStart={(e) => handleDragStartTask(e, idx)}
+                    onDragOver={handleDragOverTask}
+                    onDrop={(e) => handleDropTask(e, idx)}
+                    style={{ cursor: 'grab' }}
+                  >
                     <div 
                       className="task-checkbox"
                       onClick={(e) => {
