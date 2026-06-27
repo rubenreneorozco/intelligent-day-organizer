@@ -347,7 +347,7 @@ function App() {
             onOpenTask={setActiveTask}
           />
         ) : (
-          <div style={{ flex: 1, padding: '2rem 4rem', overflow: 'hidden' }}>
+          <div className="main-content">
             <ProjectBoard 
               project={projects.find(p => p.id === currentView)}
               tasks={tasks.filter(t => t.projectId === currentView)}

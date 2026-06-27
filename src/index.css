@@ -342,3 +342,55 @@ h1, h2, h3, h4 {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
 }
+
+.my-day-wrapper {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .agent-sidebar {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+  }
+  
+  nav {
+    width: 100% !important;
+    max-height: 300px;
+    border-right: none !important;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+  
+  .main-content {
+    padding: 1.5rem 1rem !important;
+    overflow-y: visible !important;
+  }
+
+  .my-day-wrapper {
+    flex-direction: column !important;
+  }
+  
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .task-input-container {
+    flex-direction: column;
+  }
+  
+  .task-input-container .btn {
+    width: 100%;
+  }
+}
+

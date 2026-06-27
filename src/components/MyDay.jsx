@@ -71,8 +71,8 @@ export default function MyDay({ tasks, onUpdateTask, onAddTask, onDeleteTask, on
   };
 
   return (
-    <div style={{ display: 'flex', width: '100%', height: '100%' }}>
-      <main style={{ flex: 1, padding: '2rem 4rem', overflowY: 'auto' }}>
+    <div className="my-day-wrapper">
+      <main className="main-content">
         <header className="app-header">
           <div>
             <h1 className="app-title">My Day</h1>
