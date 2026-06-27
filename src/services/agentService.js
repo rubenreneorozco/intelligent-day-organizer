@@ -42,7 +42,7 @@ Group them into logical blocks (e.g., Deep Work, Admin, Personal) and give a bri
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: promptText,
     });
     return response.text;
