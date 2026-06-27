@@ -229,8 +229,8 @@ const columnsContainerStyle = {
 };
 
 const columnStyle = {
-  width: '320px',
-  minWidth: '320px',
+  flex: 1,
+  minWidth: '280px',
   backgroundColor: 'var(--color-bg-card)',
   borderRadius: 'var(--radius-md)',
   display: 'flex',
