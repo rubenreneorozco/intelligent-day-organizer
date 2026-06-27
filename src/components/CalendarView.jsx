@@ -14,8 +14,10 @@ import {
 } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
-export default function CalendarView({ tasks, projects, onOpenTask }) {
+export default function CalendarView({ tasks, projects, onOpenTask, onAddTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [addingTaskForDate, setAddingTaskForDate] = useState(null);
+  const [newTaskText, setNewTaskText] = useState('');
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
@@ -38,6 +40,25 @@ export default function CalendarView({ tasks, projects, onOpenTask }) {
   const getProjectColor = (projectId) => {
     const proj = projects.find(p => p.id === projectId);
     return proj ? proj.color : 'var(--color-accent)';
+  };
+
+  const handleQuickAdd = (day) => {
+    if (!newTaskText.trim()) {
+      setAddingTaskForDate(null);
+      return;
+    }
+    
+    onAddTask({
+      id: Date.now().toString(),
+      text: newTaskText.trim(),
+      projectId: null,
+      status: 'todo',
+      completed: false,
+      dueDate: day.toISOString(),
+      createdAt: new Date().toISOString()
+    });
+    setNewTaskText('');
+    setAddingTaskForDate(null);
   };
 
   return (
@@ -69,6 +90,7 @@ export default function CalendarView({ tasks, projects, onOpenTask }) {
           const dayTasks = getTasksForDay(day);
           const isCurrentMonth = isSameMonth(day, monthStart);
           const isToday = isSameDay(day, new Date());
+          const isAdding = addingTaskForDate === day.toISOString();
 
           return (
             <div 
@@ -79,6 +101,10 @@ export default function CalendarView({ tasks, projects, onOpenTask }) {
                 backgroundColor: isToday ? 'rgba(230, 57, 70, 0.05)' : 'var(--color-bg-card)',
                 border: isToday ? '1px solid var(--color-accent)' : '1px solid var(--color-border)'
               }}
+              onClick={() => {
+                setAddingTaskForDate(day.toISOString());
+                setNewTaskText('');
+              }}
             >
               <div style={dateNumberStyle(isToday)}>{format(day, 'd')}</div>
               
@@ -87,7 +113,10 @@ export default function CalendarView({ tasks, projects, onOpenTask }) {
                   <div 
                     key={task.id}
                     style={{...calendarTaskStyle, borderLeftColor: getProjectColor(task.projectId)}}
-                    onClick={() => onOpenTask(task)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenTask(task);
+                    }}
                   >
                     <div style={{ 
                       textDecoration: task.completed ? 'line-through' : 'none', 
@@ -100,6 +129,31 @@ export default function CalendarView({ tasks, projects, onOpenTask }) {
                     </div>
                   </div>
                 ))}
+
+                {isAdding && (
+                  <div style={{ marginTop: '0.25rem' }} onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="text"
+                      autoFocus
+                      value={newTaskText}
+                      onChange={e => setNewTaskText(e.target.value)}
+                      placeholder="Add task..."
+                      onBlur={() => handleQuickAdd(day)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleQuickAdd(day);
+                        } else if (e.key === 'Escape') {
+                          setAddingTaskForDate(null);
+                        }
+                      }}
+                      style={{
+                        width: '100%', padding: '0.25rem 0.5rem', fontSize: '0.75rem',
+                        border: '1px solid var(--color-accent)', borderRadius: '4px', outline: 'none',
+                        backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)'
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -145,7 +199,8 @@ const dayCellStyle = {
   padding: '0.5rem',
   display: 'flex',
   flexDirection: 'column',
-  transition: 'border-color 0.2s'
+  transition: 'border-color 0.2s',
+  cursor: 'pointer'
 };
 
 const dateNumberStyle = (isToday) => ({

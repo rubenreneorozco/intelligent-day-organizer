@@ -345,6 +345,7 @@ function App() {
             tasks={tasks}
             projects={projects}
             onOpenTask={setActiveTask}
+            onAddTask={handleAddTask}
           />
         ) : (
           <div className="main-content">
